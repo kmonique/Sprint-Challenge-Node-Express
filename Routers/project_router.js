@@ -40,11 +40,15 @@ router.get("/:id/actions", (req, res) => {
 router.post("/", (req, res) => {
    const project = req.body;
    if(project.name && project.description) {
-      projectDb.insert(project)
-         .then(project => {
-            res.status(201).json(project);
-         })
-         .catch(err => { res.status(500).json({error: "error adding project"}); });
+      if(project.name.length <= 128) {
+         projectDb.insert(project)
+            .then(project => {
+               res.status(201).json(project);
+            })
+            .catch(err => { res.status(500).json({error: "error adding project"}); });
+      } else {
+         res.status(400).json({error: "name must be 128 characters or less"})
+      }
    } else { 
       res.status(400).json({error: "please provide project name and description"}) 
    }
@@ -65,13 +69,17 @@ router.put("/:id", (req, res) => {
    const {id} = req.params;
    const project = req.body;
    if(project.name && project.description) {
-      projectDb.update(id, project)
-         .then(project => {
-            project != null ? res.json(project) : res.status(404).json({error: `a project with the id of ${id} does not exist`})
-         })
-         .catch(err => {
-            res.status(500).json
-         })
+      if(project.name.length <= 128) {
+         projectDb.update(id, project)
+            .then(project => {
+               project != null ? res.json(project) : res.status(404).json({error: `a project with the id of ${id} does not exist`})
+            })
+            .catch(err => {
+               res.status(500).json({error: "error updating project"})
+            })
+         } else {
+            res.status(400).json({error: "project name must be 128 characters or less"})
+         }
    } else {
       res.status(400).json({error: "please provide project name and description"})
    }

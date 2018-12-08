@@ -1,5 +1,6 @@
 //requires
 const actionDb = require("../data/helpers/actionModel.js");
+const projectDb = require("../data/helpers/projectModel.js");
 const express = require("express");
 const router = express.Router();
 
@@ -28,12 +29,19 @@ router.post("/", (req, res) => {
    const action = req.body;
    if(action.project_id && action.description && action.notes) {
       if(action.description.length < 128) {
-         actionDb.insert(action)
-            .then(action => {
-               res.status(201).json(action);
-            })
-            .catch(err => {
-               res.status(500).json({error: "error adding action"});
+         projectDb.get()
+            .then(projects => {
+               if(action.project_id <= projects.length) {
+                  actionDb.insert(action)
+                     .then(action => {
+                        res.status(201).json(action);
+                     })
+                     .catch(err => {
+                        res.status(500).json({error: "error adding action"});
+                     })
+               } else {
+                  res.status(404).json({error: "project id does not exist"});
+               }
             })
       } else {
          res.status(400).json({error: "action description must be 128 characters or less"});
@@ -59,12 +67,19 @@ router.put("/:id", (req, res) => {
    const action = req.body;
    if(action.project_id && action.description && action.notes) {
       if(action.description.length < 128) {
-         actionDb.update(id, action)
-            .then(action => {
-               action != null ? res.json(action) : res.status(404).json({error: "action not found"})
-            })
-            .catch(err => {
-               res.status(500).json({error: "error updating action"});
+         projectDb.get()
+            .then(projects => {
+               if(action.project_id <= projects.length) {
+                  actionDb.update(id, action)
+                     .then(action => {
+                        action != null ? res.json(action) : res.status(404).json({error: "action not found"})
+                     })
+                     .catch(err => {
+                        res.status(500).json({error: "error updating action"});
+                     })
+               } else {
+                  res.status(404).json({error: "project id does not exist"});
+               }
             })
       } else {
          res.status(400).json({error: "action description must be 128 characters or less"});
